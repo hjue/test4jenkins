@@ -1,0 +1,15 @@
+def label = "mypod-${UUID.randomUUID().toString()}"
+podTemplate(label: label, cloud: 'kubernetes',containers: [
+    containerTemplate(
+        name: 'jnlp', 
+        image: 'registry-internal.cn-hangzhou.aliyuncs.com/gionee-library/jenkins-slaves:latest', 
+        alwaysPullImage: false, 
+        args: '${computer.jnlpmac} ${computer.name}'),
+  ]) {
+
+    node(label) {
+        stage('stage1') {
+            sh 'sleep 60s'
+        }
+    }
+}

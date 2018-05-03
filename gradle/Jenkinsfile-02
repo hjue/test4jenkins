@@ -1,11 +1,16 @@
 def label = "mypod-${UUID.randomUUID().toString()}"
 podTemplate(label: label, cloud: 'kubernetes',
-  containers: [
+    containers: [
     containerTemplate(
         name: 'jnlp', 
         image: 'registry-internal.cn-hangzhou.aliyuncs.com/gionee-library/jenkins-slave:1.0', 
         alwaysPullImage: false, 
         args: '${computer.jnlpmac} ${computer.name}'),
+  containerTemplate(
+        name: 'gradle', 
+        image: 'registry-internal.cn-hangzhou.aliyuncs.com/gionee-library/gradle:4.7-jdk8', 
+        command: 'cat',
+        ttyEnabled: true),
     containerTemplate(
         name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
   ],volumes: [
@@ -13,10 +18,14 @@ podTemplate(label: label, cloud: 'kubernetes',
   ]) {
 
     node(label) {
-        stage('build') {
-            git url: 'https://github.com/hjue/springboot-jenkins-demo.git'
-            sh 'gradle --version'
-            sh 'gradle -x test build'
+        stage('stage1') {
+            stage('Show Maven version') {
+                git url: 'https://github.com/hjue/springboot-jenkins-demo.git'
+                container('jnlp') {
+                sh 'gradle --version'
+                sh 'gradle build'}
+                sh 'sleep 60s'
+            }
         }
     }
 }
