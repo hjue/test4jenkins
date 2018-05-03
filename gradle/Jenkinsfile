@@ -1,20 +1,22 @@
-def label = "worker-${UUID.randomUUID().toString()}"
+def label = "mypod-${UUID.randomUUID().toString()}"
+podTemplate(label: label, cloud: 'kubernetes',
+  containers: [
+    containerTemplate(
+        name: 'jnlp', 
+        image: 'registry-internal.cn-hangzhou.aliyuncs.com/gionee-library/jenkins-slaves:latest', 
+        alwaysPullImage: false, 
+        args: '${computer.jnlpmac} ${computer.name}'),
+    containerTemplate(
+        name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
+  ],volumes: [
+     hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')
+  ]) {
 
-podTemplate(label: label, containers: [
-  containerTemplate(name: 'gradle', image: 'gradle:jdk8', command: 'cat', ttyEnabled: true),
-  containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true)
-],
-volumes: [
-  hostPathVolume(mountPath: '/home/gradle/.gradle', hostPath: '/tmp/jenkins/.gradle'),
-  hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
-]) {
-  node(label) {
-    git url: 'https://github.com/spring-guides/gs-spring-boot.git'
-
-    stage('Build') {
-      container('gradle') {
-        sh "gradle build"
-      }
+    node(label) {
+        stage('build') {
+            git url: 'https://github.com/hjue/springboot-jenkins-demo.git'
+            sh 'gradle --version'
+            sh 'gradle -x test build'
+        }
     }
-  }
 }
